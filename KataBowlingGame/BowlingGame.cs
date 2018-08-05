@@ -1,94 +1,63 @@
-﻿namespace KataBowlingGame
+﻿using System.Collections.Generic;
+
+namespace KataBowlingGame
 {
     /// <summary>
-    /// In this BowlingGame, in each two throws we add a frame to the table ** _frames **
-    /// Because of some spesific cases (bonus), in order to calculate the score of each frame we test if there's a bonus (a spare or a strike), 
-    /// => then we add the score of the frame to the global score of the game.
+    /// This is a regular BowlingGame with 10 frames of 2 throws and a bonus frame in case of spare or strike in the last frame
     /// In this game a foul is supposed to be a throw with 0 falled pins
+    /// ** _frames ** is the list of frames in the games
+    /// ** _throws ** is the list of throws of all frames in the games
     /// </summary>
     public class BowlingGame
     {
-        #region fields
-        private int[,] _frames = new int[12, 2];
-        private int frameIndex = 0;
-        private int throwIndex = 0;
-        #endregion fields
+        private readonly FrameChecker _frameValidator;
+        private readonly IList<IFrame> _frames;
+        private readonly IList<Throw> _throws;
+        public const int MaxThrowsCount = 23;
+        public const int MaxFramesCount = 12;
 
+        public BowlingGame()
+        {
+            _frames = new List<IFrame>(MaxFramesCount);
+            _throws = new List<Throw>(MaxThrowsCount);
+            _frameValidator = new FrameChecker(_frames, _throws);
+        }
         public int Score
         {
             get
             {
-                return CalculateScore();
-            }
-        }
-
-        public void AddThrow(int falledPins)
-        {
-            // if throwIndex is 2 or it's a strike, we pass to the next frame
-            if (throwIndex == 2)
-            {
-                MoveToNextFrame();
-            }
-
-            _frames[frameIndex, throwIndex++] = falledPins;
-
-            if (falledPins == 10)
-            {
-                MoveToNextFrame();
-            }
-        }
-
-
-        #region private methods
-        private int CalculateScore()
-        {
-            var score = 0;
-            for (var frame = 0; frame < 10; frame++)
-            {
-                if (IsStrike(frame))
+                int score = 0;
+                foreach (var frame in _frames)
                 {
-                    score += 10 + StrikeBonus(frame);
+                    score += frame.GetScore();
                 }
-                else if (IsSpare(frame))
-                {
-                    score += 10 + SpareBonus(frame);
-                }
-                else
-                {
-                    score += NormalScore(frame);
-                }
+                return score;
             }
-            return score;
         }
 
-        private void MoveToNextFrame()
+
+        public void AddBasicFrame(int firstThrowFalledPins, int secondThrowFalledPins)
         {
-            throwIndex = 0;
-            frameIndex++;
-        }
-        private bool IsSpare(int frame)
-        {
-            return _frames[frame, 0] + _frames[frame, 1] == 10;
-        }
-        private bool IsStrike(int frame)
-        {
-            return _frames[frame, 0] == 10;
+            _frameValidator.CheckBasicFrame(firstThrowFalledPins, secondThrowFalledPins);
+            _frames.Add(new BasicFrame(_throws, firstThrowFalledPins, secondThrowFalledPins));
         }
 
-        private int SpareBonus(int frame)
+        public void AddSpare(int firstThrowFalledPins, int secondThrowFalledPins)
         {
-            return _frames[frame + 1, 0];
+            _frameValidator.CheckSpare(firstThrowFalledPins, secondThrowFalledPins);
+            _frames.Add(new Spare(_throws, firstThrowFalledPins, secondThrowFalledPins));
         }
 
-        private int StrikeBonus(int frame)
+        public void AddStrike()
         {
-            return _frames[frame + 1, 0] + _frames[frame + 2, 0];
+            _frameValidator.CheckStrike();
+            _frames.Add(new Strike(_throws));
         }
 
-        private int NormalScore(int frame)
+        public void AddBonusFrame(int falledPins)
         {
-            return _frames[frame, 0] + _frames[frame, 1];
+            _frameValidator.CheckBonusFrame(falledPins);
+            _frames.Add(new BonusFrame(_throws, falledPins));
         }
-        #endregion private methods
     }
 }
