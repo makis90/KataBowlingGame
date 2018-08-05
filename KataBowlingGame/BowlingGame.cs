@@ -10,7 +10,7 @@ namespace KataBowlingGame
     /// </summary>
     public class BowlingGame
     {
-        private readonly FrameChecker _frameValidator;
+        private readonly FrameChecker _frameChecker;
         private readonly IList<IFrame> _frames;
         private readonly IList<Throw> _throws;
         public const int MaxThrowsCount = 23;
@@ -20,7 +20,7 @@ namespace KataBowlingGame
         {
             _frames = new List<IFrame>(MaxFramesCount);
             _throws = new List<Throw>(MaxThrowsCount);
-            _frameValidator = new FrameChecker(_frames, _throws);
+            _frameChecker = new FrameChecker(_frames, _throws);
         }
         public int Score
         {
@@ -38,25 +38,25 @@ namespace KataBowlingGame
 
         public void AddBasicFrame(int firstThrowFalledPins, int secondThrowFalledPins)
         {
-            _frameValidator.CheckBasicFrame(firstThrowFalledPins, secondThrowFalledPins);
+            _frameChecker.CheckBasicFrame(firstThrowFalledPins, secondThrowFalledPins);
             _frames.Add(new BasicFrame(_throws, firstThrowFalledPins, secondThrowFalledPins));
         }
 
         public void AddSpare(int firstThrowFalledPins, int secondThrowFalledPins)
         {
-            _frameValidator.CheckSpare(firstThrowFalledPins, secondThrowFalledPins);
+            _frameChecker.CheckSpare(firstThrowFalledPins, secondThrowFalledPins);
             _frames.Add(new Spare(_throws, firstThrowFalledPins, secondThrowFalledPins));
         }
 
         public void AddStrike()
         {
-            _frameValidator.CheckStrike();
+            _frameChecker.CheckStrike();
             _frames.Add(new Strike(_throws));
         }
 
         public void AddBonusFrame(int falledPins)
         {
-            _frameValidator.CheckBonusFrame(falledPins);
+            _frameChecker.CheckBonusFrame(falledPins);
             _frames.Add(new BonusFrame(_throws, falledPins));
         }
     }
